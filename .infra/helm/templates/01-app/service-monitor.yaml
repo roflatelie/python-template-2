@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.app.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: {{ .Values.app.name }}
+    app.kubernetes.io/name: {{ .Values.app.name }}
+spec:
+  endpoints:
+    - interval: 15s
+      path: /metrics
+      port: http
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Values.app.name }}
+      app.kubernetes.io/name: {{ .Values.app.name }}

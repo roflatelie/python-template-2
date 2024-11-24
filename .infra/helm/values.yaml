@@ -1,0 +1,47 @@
+global:
+  hostname: k8s.local
+
+app:
+  # version: git commit
+  version: 0.0.1
+  name: books
+  image: localhost:5000/books:latest
+  replicas: 3
+  ports:
+    - name: http
+      containerPort: 5000
+      protocol: TCP
+  env:
+    - name: LOG_FORMATTER
+      value: json
+    - name: LOG_LEVEL
+      value: INFO
+    - name: ASYNCPG_DSN
+      value: postgresql://postgres:postgres@postgres-books:5432/postgres
+    - name: ELASTIC_APM_ENABLED
+      value: "false"
+
+postgres:
+  name: postgres
+  image: postgres:15
+  replicas: 1
+  ports:
+    - name: tcp
+      containerPort: 5432
+      protocol: TCP
+  service:
+    ports:
+      - protocol: TCP
+        port: 5432
+        targetPort: 5432
+  pvc:
+    accessModes: ["ReadWriteOnce"]
+    storage: "1Gi"
+    containerPath: "/var/lib/postgresql/data"
+  env:
+    - name: POSTGRES_USER
+      value: postgres
+    - name: POSTGRES_DB
+      value: postgres
+    - name: POSTGRES_PASSWORD
+      value: postgres

@@ -1,0 +1,10 @@
+{% if edit %}
+    <form hx-post="/books/{{ book.book.id }}/edit/title/" enctype="multipart/form-data">
+        <div class="input-group mb-3">
+            <button class="btn btn-outline-secondary" type="submit">Save</button>
+            <input type="text" class="form-control" aria-label="Example text with button addon" aria-describedby="button-addon1" name="title" value="{{ book.book.title }}">
+        </div>
+    </form>
+{% else %}
+    <b>{{ book.book.title }}</b>
+{% endif %}

@@ -1,0 +1,33 @@
+[MESSAGES CONTROL]
+extension-pkg-whitelist=
+    pydantic,
+extension-pkg-allow-list=
+    ujson,
+disable=C0114, # missing-module-docstring
+        R0903, # too-few-public-methods
+        C0115, # missing-class-docstring
+        C0116, # missing-function-docstring
+        W0702, # No exception type(s) specified (bare-except)
+        C0411, # wrong-import-order. isort conflict
+
+[MISCELLANEOUS]
+notes=FIXME,
+      TODO
+
+[BASIC]
+good-names=
+    i, j, k, # enumerators
+    e, exc, # exception
+    Run,
+    _, # useless / unused
+    pk, # primary key
+    sa, # sqlalchemy
+    pd, # pandas
+    df, # pandas.DataFrame
+    np, # numpy
+    fp, # File Pointer
+
+[FORMAT]
+indent-after-paren=4
+indent-string='    '
+max-line-length=120

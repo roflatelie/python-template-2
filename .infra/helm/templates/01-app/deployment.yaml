@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.app.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: {{ .Values.app.name }}
+    app.kubernetes.io/name: {{ .Values.app.name }}
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Values.app.name }}
+      app.kubernetes.io/name: {{ .Values.app.name }}
+      service: http
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Values.app.name }}
+        app.kubernetes.io/name: {{ .Values.app.name }}
+        service: http
+    spec:
+      initContainers:
+        - name: migrations
+          image: {{ .Values.app.image }}
+          command: ['sh', '-c', 'alembic upgrade head']
+          env:
+            - name: APP_NAME
+              value: {{ .Values.app.name }}
+            - name: APP_ENVIRONMENT
+              value: {{ .Release.Namespace }}
+            - name: POD_IMAGE
+              value: {{ .Values.app.image }}
+            - name: POD_NODE
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            {{ toYaml .Values.app.env | nindent 12 }}
+      containers:
+        - name: {{ .Values.app.name }}
+          image: {{ .Values.app.image }}
+          env:
+            - name: APP_NAME
+              value: {{ .Values.app.name }}
+            - name: APP_ENVIRONMENT
+              value: {{ .Release.Namespace }}
+            - name: POD_IMAGE
+              value: {{ .Values.app.image }}
+            - name: POD_NODE
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            {{ toYaml .Values.app.env | nindent 12 }}
+          ports:
+            {{ toYaml .Values.app.ports | nindent 12 }}
+
+          startupProbe:
+            httpGet:
+              port: http
+              path: /readiness
+
+          livenessProbe:
+            httpGet:
+              port: http
+              path: /liveness
+
+          readinessProbe:
+            httpGet:
+              port: http
+              path: /readiness

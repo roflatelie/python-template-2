@@ -1,0 +1,132 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./.tmp:/tmp
+      - ./.docker/postgres:/var/lib/postgresql/data
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 10240000000
+    ports:
+      - 5432:5432
+
+  pgbouncer:
+    image: bitnami/pgbouncer:1.23.1
+    depends_on:
+      - postgres
+    ports:
+      - 6432:6432
+    environment:
+      PGBOUNCER_DATABASE: "*"
+      POSTGRESQL_PASSWORD: postgres
+      PGBOUNCER_POOL_MODE: session
+      PGBOUNCER_QUERY_WAIT_TIMEOUT: 1
+      PGBOUNCER_IDLE_TRANSACTION_TIMEOUT: 1
+      PGBOUNCER_RESERVE_POOL_TIMEOUT: 1
+      POSTGRESQL_HOST: postgres
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn src.interface.rest.litestar.app:app --host 0.0.0.0 --port 5000 --loop uvloop --workers=1 --reload --log-level=debug
+    ports:
+      - 5000:5000
+    depends_on:
+      - pgbouncer
+      - kibana
+      - grafana
+    volumes:
+      - .:/www
+    env_file:
+      - path: ./.env.template
+        required: true
+      - path: ./.env
+        required: false
+
+  apm:
+    image: elastic/apm-server:7.17.17
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    cap_add: [ "CHOWN", "DAC_OVERRIDE", "SETGID", "SETUID" ]
+    cap_drop: [ "ALL" ]
+    ports:
+      - 8200:8200
+    command: >
+      apm-server -e
+        -E apm-server.rum.enabled=true
+        -E setup.kibana.host=kibana:5601
+        -E setup.template.settings.index.number_of_replicas=0
+        -E apm-server.kibana.enabled=true
+        -E apm-server.kibana.host=kibana:5601
+        -E output.elasticsearch.hosts=["elasticsearch:9200"]
+    healthcheck:
+      interval: 10s
+      retries: 12
+      test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:8200/
+
+  elasticsearch:
+    image: elasticsearch:7.17.17
+    environment:
+      - bootstrap.memory_lock=true
+      - cluster.name=docker-cluster
+      - cluster.routing.allocation.disk.threshold_enabled=false
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-XX:UseAVX=2 -Xms1g -Xmx1g
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+    ports:
+      - 9200:9200
+    healthcheck:
+      interval: 20s
+      retries: 10
+      test: curl -s http://localhost:9200/_cluster/health | grep -vq '"status":"red"'
+
+  kibana:
+    image: kibana:7.17.17
+    depends_on:
+      apm:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - 5601:5601
+    healthcheck:
+      interval: 10s
+      retries: 20
+      test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:5601/api/status
+
+  grafana:
+    image: grafana/grafana-enterprise
+    user: root
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+    volumes:
+      - ./.docker/grafana:/var/lib/grafana
+
+
+  prometheus:
+    image: prom/prometheus:latest
+    user: root
+    extra_hosts:
+      - host.docker.internal:172.17.0.1
+    ports:
+      - 9090:9090
+    volumes:
+      - ./.docker/prometheus/:/etc/prometheus/
+      - ./.docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'

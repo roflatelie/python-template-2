@@ -1,0 +1,20 @@
+{% if edit %}
+    <form hx-post="/books/{{ book.book.id }}/edit/categories/" enctype="multipart/form-data">
+        <button class="btn btn-primary" type="submit">Save</button>
+        {% for category in categories %}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="{{ category.id }}" {% if category.id in book.categories_id %}checked{% endif %} name="categories" id="flexCheckDefault">
+                <label class="form-check-label" for="flexCheckDefault"> {{ category.name }} </label>
+            </div>
+        {% endfor %}
+        <button class="btn btn-primary" type="submit">Save</button>
+    </form>
+{% else %}
+    <ui hx-get="/books/{{ book.book.id }}/edit/categories/" hx-swap="outerHTML" hx-trigger="click">
+        {% for category in book.categories %}
+            <li><b>{{ category.name }}</b></li>
+        {% else %}
+            <li><b>No set any category</b></li>
+        {% endfor %}
+    </ui>
+{% endif %}

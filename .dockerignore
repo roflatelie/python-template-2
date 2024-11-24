@@ -1,0 +1,6 @@
+.*
+media/*
+Dockerfile
+docker-compose.yml
+__pycache__
+!.pylintrc

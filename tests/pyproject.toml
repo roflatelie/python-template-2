@@ -1,0 +1,13 @@
+[tool.ruff]
+extend = "../pyproject.toml"
+
+[tool.ruff.lint]
+ignore = [
+    "RUF029", #  Function `...` is declared `async`, but doesn't `await` or use `async` features.
+    "S101", # Use of `assert` detected
+    "TCH002",  # Move third-party import `...` into a type-checking block
+    "ARG001", # Unused function argument: `...`
+    "SLF001", # Private member accessed: `...`
+    "ANN001", # Missing type annotation for function argument `event_loop`
+
+]

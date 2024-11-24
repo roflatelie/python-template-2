@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="row mb3">
+        <div class="col" style="border: solid 1px #81a2c3" hx-get="/categories" hx-trigger="load" hx-target="#category_list" id="category_list"></div>
+    </div>
+{% endblock %}

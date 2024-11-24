@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="row mb3">
+        <div class="col-2">
+            <a href="/static{{ book.book.file }}">
+                <img src="/static{{ book.book.cover }}" width="200" alt="{{ book.book.title }}"/>
+            </a>
+            <hr/>
+            <button type="button" class="btn btn-danger" hx-delete="/books/{{ book.book.id }}/">Delete</button>
+        </div>
+        <div class="col-10">
+            <hr/>
+            <div class="row">
+                <b hx-get="/books/{{ book.book.id }}/edit/title/" hx-swap="outerHTML" hx-trigger="click">{{ book.book.title }}</b>
+            </div>
+            <hr/>
+            <div class="row">
+                Authors:
+                {% for author in book.authors %}
+                    <b>{{ author.name }}</b>
+                {% else %}
+                &nbsp;
+                {% endfor %}
+            </div>
+            <hr/>
+            <div class="row">
+                Categories:
+                <ui hx-get="/books/{{ book.book.id }}/edit/categories/" hx-swap="outerHTML" hx-trigger="click">
+                    {% for category in book.categories %}
+                        <li><b>{{ category.name }}</b></li>
+                    {% else %}
+                        <li><p style="color: brown;">No set any category</p></li>
+                    {% endfor %}
+                </ui>
+            </div>
+        </div>
+    </div>
+{% endblock %}

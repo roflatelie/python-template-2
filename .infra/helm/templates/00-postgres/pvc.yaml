@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.postgres.name}}-{{ .Values.app.name }}
+  labels:
+    app: {{ .Values.postgres.name}}-{{ .Values.app.name }}
+    namespace: {{ .Release.Namespace }}
+spec:
+  accessModes: {{ .Values.postgres.pvc.accessModes }}
+  resources:
+    requests:
+      storage: {{ .Values.postgres.pvc.storage }}

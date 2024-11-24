@@ -1,0 +1,8 @@
+.*
+__pycache__
+media/
+!.dockerignore
+!.gitignore
+!.pylintrc
+!.infra
+!.env.template

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.postgres.name}}-{{ .Values.app.name }}
+spec:
+  selector:
+    app: {{ .Values.postgres.name}}-{{ .Values.app.name }}
+    namespace: {{ .Release.Namespace }}
+  ports:
+    {{toYaml .Values.postgres.service.ports | nindent 4 }}
